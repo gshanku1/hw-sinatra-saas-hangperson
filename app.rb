@@ -40,6 +40,16 @@ class HangpersonApp < Sinatra::Base
   post '/guess' do
     letter = params[:guess].to_s[0]
     ### YOUR CODE HERE ###
+    is_valid_guess = true
+    begin 
+      is_valid_guess = @game.guess(letter)
+    rescue ArgumentError
+      flash[:message] = "Invalid guess."
+    end
+
+    if ! is_valid_guess 
+      flash[:message] = "You have already used that letter."
+    end
     redirect '/show'
   end
   
@@ -50,17 +60,44 @@ class HangpersonApp < Sinatra::Base
   # wrong_guesses and word_with_guesses from @game.
   get '/show' do
     ### YOUR CODE HERE ###
-    erb :show # You may change/remove this line
+    game_state = @game.check_win_or_lose()
+    case game_state
+    when :win
+      redirect '/win'
+    when :lose
+      redirect '/lose'
+    when :play 
+    erb :show, :locals => {
+                       :word_with_guesses => @game.word_with_guesses, 
+                       :wrong_guesses => @game.wrong_guesses
+      }
+    end
   end
   
   get '/win' do
     ### YOUR CODE HERE ###
-    erb :win # You may change/remove this line
+    game_state = @game.check_win_or_lose()
+    case game_state
+    when :lose
+      redirect '/lose'
+    when :play
+      redirect '/show'
+    else 
+      erb :win, :locals => {:word => @game.word}
+    end
   end
-  
+
   get '/lose' do
     ### YOUR CODE HERE ###
-    erb :lose # You may change/remove this line
+    game_state = @game.check_win_or_lose()
+    case game_state
+    when :win
+      redirect '/win'
+    when :play
+      redirect '/show'
+    else 
+    erb :lose, :locals => {:word => @game.word}  
+    end 
   end
   
 end
